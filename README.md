@@ -6,7 +6,7 @@ Quem atende por horário costuma operar no WhatsApp e no caderno, e paga por iss
 
 > 🔒 **O código-fonte é privado** por ser um produto comercial da [DaBi Tech](https://dabitech.com.br). Este repositório documenta a arquitetura, as decisões técnicas e o meu papel no projeto. Posso liberar acesso de leitura ou apresentar o código em uma conversa técnica: [LinkedIn](https://www.linkedin.com/in/moysesemanuel/).
 
-🔗 **Demo:** <!-- coloque aqui o link da barbearia de demonstração e, se quiser, um login de teste -->
+🔗 **Demo:** [barbearia-teste.dabitech.com.br](https://barbearia-teste.dabitech.com.br), barbearia fictícia de demonstração
 
 ---
 
@@ -24,10 +24,11 @@ Desenvolvi o produto sozinho, de ponta a ponta:
 
 ## Telas
 
-<!-- Adicione os prints na pasta screenshots/ -->
-| Site do estabelecimento | Agendamento | Backoffice |
+| Site do estabelecimento | Serviços | Escolha do serviço |
 |---|---|---|
-| ![Site](screenshots/site.png) | ![Agendamento](screenshots/agendamento.png) | ![Backoffice](screenshots/backoffice.png) |
+| ![Site](screenshots/site-home.jpg) | ![Serviços](screenshots/site-servicos.jpg) | ![Serviço](screenshots/agendamento-servico.jpg) |
+| **Escolha do horário** | **Backoffice** | **Agenda** |
+| ![Horário](screenshots/agendamento-horario.jpg) | ![Backoffice](screenshots/backoffice-visao-geral.jpg) | ![Agenda](screenshots/backoffice-agenda.jpg) |
 
 ---
 
