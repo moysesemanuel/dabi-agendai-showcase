@@ -1,34 +1,16 @@
 # DaBi Agendaí
 
-**Plataforma de agendamento multi-tenant para negócios que atendem por horário marcado** (barbearias, salões, estúdios e clínicas).
+Sistema de agendamento multi-tenant para prestadores de serviço com atendimento por horário — barbearias, salões, estúdios e clínicas. Cada estabelecimento tem seu próprio subdomínio, com site institucional, agendamento online, área do cliente, cobrança recorrente e um backoffice completo.
 
-Quem atende por horário costuma operar no WhatsApp e no caderno, e paga por isso com conflito de agenda, tempo perdido confirmando horário e cliente que não aparece. No Agendaí, cada estabelecimento ganha um subdomínio próprio com site, agendamento online, área do cliente, programa de fidelidade, backoffice e cobrança recorrente. O cliente agenda sozinho e o dono é avisado na hora.
-
-> 🔒 **O código-fonte é privado** por ser um produto comercial da [DaBi Tech](https://dabitech.com.br). Este repositório documenta a arquitetura, as decisões técnicas e o meu papel no projeto. Posso liberar acesso de leitura ou apresentar o código em uma conversa técnica: [LinkedIn](https://www.linkedin.com/in/moysesemanuel/).
-
-🔗 **Demo:** [barbearia-teste.dabitech.com.br](https://barbearia-teste.dabitech.com.br), barbearia fictícia de demonstração
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Prisma · PostgreSQL · Vercel
 
 ---
 
-## Meu papel
+## O problema
 
-Desenvolvi o produto sozinho, de ponta a ponta:
+Quem atende por horário marcado normalmente opera no WhatsApp e no caderno. O custo disso aparece como conflito de agenda, tempo perdido confirmando horário por mensagem, cliente que não aparece e nenhuma visão do próprio negócio.
 
-- **Produto:** defini os módulos, os fluxos de agendamento e o modelo de planos.
-- **Arquitetura:** desenhei o modelo multi-tenant por domínio, com dados e sessões isolados por estabelecimento.
-- **Back-end e front-end:** Next.js 16 com App Router, Prisma e PostgreSQL, do schema às telas.
-- **Integrações:** cobrança com Mercado Pago, notificações por Web Push, Telegram e WhatsApp, e-mail transacional.
-- **Qualidade e operação:** testes unitários e E2E, CI no GitHub Actions, observabilidade com Sentry e deploy na Vercel.
-
----
-
-## Telas
-
-| Site do estabelecimento | Serviços | Escolha do serviço |
-|---|---|---|
-| ![Site](screenshots/site-home.jpg) | ![Serviços](screenshots/site-servicos.jpg) | ![Serviço](screenshots/agendamento-servico.jpg) |
-| **Escolha do horário** | **Backoffice** | **Agenda** |
-| ![Horário](screenshots/agendamento-horario.jpg) | ![Backoffice](screenshots/backoffice-visao-geral.jpg) | ![Agenda](screenshots/backoffice-agenda.jpg) |
+O DaBi Agendaí estrutura essa operação: o cliente agenda sozinho, o estabelecimento vê a agenda em tempo real, o histórico fica registrado e o dono é avisado na hora de cada novo agendamento — sem precisar ficar de olho no WhatsApp.
 
 ---
 
@@ -36,64 +18,67 @@ Desenvolvi o produto sozinho, de ponta a ponta:
 
 | Módulo | O que faz |
 |---|---|
-| **Site institucional** | Serviços, equipe, planos, avaliações e contato, um subdomínio por estabelecimento |
-| **Cadastro self-service** | O estabelecimento se cadastra, escolhe o plano e já sai no ar, sem intervenção manual |
-| **Agendamento** | Serviço → profissional → data → horário, com bloqueio de horário ocupado, folgas e datas fechadas |
-| **Área do cliente** | Cadastro, histórico, cancelamento, remarcação e recuperação de senha |
-| **Fidelidade** | Pontos por atendimento, níveis e recompensas configuráveis |
-| **Backoffice** | Agenda, serviços e produtos, equipe, horários, clientes, receita e FAQ |
-| **Cobrança** | Assinatura recorrente via Mercado Pago, com bloqueio automático por inadimplência |
-| **Notificações** | Aviso de novo agendamento por Web Push e Telegram, e lembretes automáticos por WhatsApp |
+| **Planos** | Básico, Pro e Max — recursos liberados progressivamente (mini site → site completo, produtos, fidelidade). Mensal ou anual, com upgrade/downgrade self-service pelo próprio painel |
+| **Site institucional** | Home com serviços, equipe, prova social e contato — um subdomínio por barbearia. Mini site no Básico, site completo a partir do Pro |
+| **Cadastro self-service** | A barbearia se cadastra sozinha e já entra no ar com **15 dias de teste grátis, sem cartão** — escolhe assinar (ou não) só depois de usar |
+| **Agendamento** | Serviço → profissional → data → horário, com bloqueio de horário ocupado e carrinho para múltiplos serviços |
+| **Área do cliente** | Cadastro, login, histórico, cancelamento, remarcação e recuperação de senha por e-mail |
+| **Fidelidade** | Pontuação por atendimento, níveis e recompensas configuráveis — exclusivo do plano Max |
+| **Backoffice** | Agenda em grade (dia/3 dias/semana), catálogo de serviços e produtos, equipe, datas bloqueadas, dados de clientes/receita e FAQ |
+| **Cobrança** | Assinatura recorrente via Mercado Pago, com bloqueio automático de acesso em caso de inadimplência |
+| **Notificações** | Aviso automático de novo agendamento por Web Push, Telegram e WhatsApp, mesmo com o painel fechado |
+| **App instalável (PWA)** | Painel e site público podem ser adicionados à tela inicial (Android e iPhone) e abrir como app, com ícone e cor da própria barbearia |
 
 ---
 
-## Arquitetura
+## O que já funciona hoje
 
-```mermaid
-flowchart LR
-    C[Cliente] --> T
-    D[Dono do negócio] --> T
-    P[Admin da plataforma] --> PL
+| Área | Estado |
+|---|---|
+| Multi-tenant real (subdomínio e dados isolados por barbearia) | ✅ |
+| Autenticação e autorização (admin e cliente, por tenant) | ✅ |
+| 3 planos (Básico/Pro/Max) com recursos liberados por plano | ✅ |
+| Cadastro self-service com 15 dias de teste grátis, sem cartão | ✅ |
+| Cobrança recorrente via Mercado Pago, com bloqueio por inadimplência | ✅ |
+| Troca de plano e de ciclo (mensal/anual) pelo próprio painel | ✅ |
+| Notificação automática de novo agendamento (Web Push, Telegram, WhatsApp) | ✅ |
+| App instalável (PWA) no painel e no site público | ✅ |
+| Configuração do site persistida no banco, por tenant | ✅ |
+| Testes automatizados (`yarn test:unit`) | ✅ |
+| Testes end-to-end (`yarn test:e2e`) | ⛔ configurado, cobertura ainda mínima |
 
-    subgraph APP[Next.js 16 · Vercel]
-        T[Tenant resolvido<br/>pelo domínio]
-        PL[Console da<br/>plataforma]
-        T --> SITE[Site · Agendamento<br/>Área do cliente · Backoffice]
-    end
+---
 
-    SITE --> DOM[Agendamento · Fidelidade<br/>Cobrança · Notificações]
-    PL --> DOM
-    DOM --> DB[(PostgreSQL<br/>Neon + Prisma)]
-    DOM <--> MP[Mercado Pago]
-    DOM --> N[Web Push · Telegram<br/>WhatsApp · Resend]
-    APP -.-> S[Sentry]
+## Rodando localmente
+
+Pré-requisitos: Node.js 20+, Yarn 1.x, PostgreSQL.
+
+```bash
+yarn install
+cp .env.example .env   # preencha as variáveis (banco, sessão, Mercado Pago, Resend, VAPID, Telegram, WhatsApp)
+yarn db:push
+yarn dev
 ```
 
-Detalhes em [docs/arquitetura.md](docs/arquitetura.md).
+O schema não usa `prisma migrate` — mudanças de schema são aplicadas com `yarn db:push` (dev) e via SQL direto em produção.
 
 ---
 
-## Destaques de engenharia
+## Roadmap
 
-**Zero agendamento duplicado.** Criar e remarcar um horário acontece dentro de uma transação com isolamento `Serializable`, que relê a agenda do profissional antes de gravar. Se dois clientes disputam o mesmo horário ao mesmo tempo, o banco rejeita um deles e a pessoa recebe uma mensagem clara para escolher outro horário. Escolhi o driver da Neon em modo WebSocket justamente porque o modo HTTP não suporta transações interativas. Veja [docs/decisoes-tecnicas.md](docs/decisoes-tecnicas.md).
+Plano de expansão dividido em ondas — detalhes em cada issue do [board do projeto](https://github.com/users/moysesemanuel/projects/6).
 
-**Multi-tenant de verdade.** O estabelecimento é identificado pelo domínio da requisição, todas as tabelas carregam o tenant, e as restrições de unicidade são por tenant (o mesmo telefone pode ser cliente de duas barbearias diferentes). A sessão do admin da plataforma é separada da sessão dos estabelecimentos.
-
-**Fuso horário protegido por teste.** Agenda é sensível a fuso: um servidor em UTC desloca o "dia" perto da meia-noite. As datas são sempre calculadas no fuso de São Paulo, e um teste varre o código-fonte e falha se alguém usar `UTC` sem justificar na mesma linha.
-
-**E2E com banco real no CI.** Toda PR roda lint, typecheck e testes unitários, depois sobe um Postgres, cria um estabelecimento de teste com credenciais geradas na hora e roda os testes E2E com Playwright. Veja [docs/testes-e-ci.md](docs/testes-e-ci.md).
-
-**SEO e GEO.** Cada estabelecimento tem sitemap, robots, imagem Open Graph gerada dinamicamente e um `llms.txt` próprio, para ser bem lido por buscadores e por assistentes de IA.
+- **Onda 2 — Gestão do dia a dia**: base de clientes ligada a todo agendamento (feito), ficha de cliente com histórico e busca, comandas (serviços + produtos, desconto, fechamento), comissão por profissional, acesso próprio por profissional, dashboard financeiro
+- **Onda 3 — Receita recorrente**: pagamento online pelo cliente final, pacotes de serviços, assinaturas de clientes (clube com cobrança recorrente)
+- **Onda 4 — Fazer o cliente voltar**: campanhas automáticas e mensagens prontas por WhatsApp, fila de espera, avaliações pós-atendimento, agendamento recorrente
+- Ampliar cobertura de testes end-to-end
+- Adaptar copy e FAQ para outros tipos de negócio além de barbearia
 
 ---
 
-## Stack
+## Licença e contato
 
-`Next.js 16` `React 19` `TypeScript` `Prisma` `PostgreSQL (Neon)` `Zod` `Mercado Pago` `Web Push` `Telegram` `WhatsApp` `Resend` `Sentry` `Vitest` `Playwright` `GitHub Actions` `Vercel`
+Projeto proprietário da DaBi Tech — Digital Solutions (Moyses Emanuel - Desenvolvedor Full-Stack).
 
----
-
-## Autor
-
-**Moyses Emanuel**, Desenvolvedor Full Stack · Curitiba, PR
-[LinkedIn](https://www.linkedin.com/in/moysesemanuel/) · [GitHub](https://github.com/moysesemanuel) · [mecs.cwb@gmail.com](mailto:mecs.cwb@gmail.com)
+- GitHub: https://github.com/moysesemanuel
+- LinkedIn: https://www.linkedin.com/in/moysesemanuel
