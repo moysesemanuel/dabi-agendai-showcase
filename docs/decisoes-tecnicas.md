@@ -29,3 +29,39 @@
 **Decisão.** Depois que o agendamento é gravado, os avisos ao dono e ao cliente são disparados de forma assíncrona. Falhas são registradas, mas não afetam a resposta ao cliente.
 
 **Por quê.** Um serviço externo fora do ar (Telegram, push, WhatsApp) não pode impedir alguém de agendar.
+
+## 5. Isolamento entre tenants garantido por teste
+
+**Problema.** Todos os estabelecimentos dividem o mesmo banco. O que os separa é a coluna do tenant, e basta uma consulta sem esse filtro para um estabelecimento ver dados de outro. Revisão de código não pega isso de forma confiável.
+
+**Decisão.** Um teste automatizado lê o schema, descobre quais tabelas têm a coluna do tenant e percorre o código-fonte. Ele falha se uma consulta a essas tabelas não citar o tenant no próprio `where`, inclusive em `update` e `delete` por id, para que uma busca anterior removida por engano não vire vazamento. Casos que operam entre tenants de propósito, como webhooks e rotinas diárias, precisam estar numa lista explícita ou ter um comentário com a justificativa.
+
+**Por quê.** A regra de segurança mais importante de um SaaS multi-tenant passa a ser verificada em toda PR, em vez de depender da atenção de quem escreve ou revisa.
+
+## 6. Pagamentos que se corrigem sozinhos
+
+**Contexto.** Webhooks chegam fora de ordem, chegam repetidos e às vezes não chegam. Dinheiro não tolera nenhum dos três.
+
+**Decisão.** Três camadas:
+
+- Cada evento é gravado com unicidade por provedor e id do evento, então reprocessar é seguro.
+- Rotinas agendadas consultam o provedor e fecham o que o webhook perdeu, como pagamentos pendentes e assinaturas fora de sincronia.
+- Quando algo realmente falha, o sistema não esconde o erro: cria um registro para o dono do estabelecimento, avisa por e-mail e à equipe, e envia o evento ao Sentry.
+
+**Por quê.** O objetivo não é que nunca falhe, e sim que toda falha seja detectada, seja corrigível sem intervenção manual quando possível, e fique visível quando não for.
+
+## 7. Contas de terceiros conectadas por OAuth
+
+**Contexto.** O pagamento do cliente final precisa cair na conta do próprio estabelecimento, sem que a plataforma segure o dinheiro nem peça credenciais.
+
+**Decisão.** Cada estabelecimento autoriza a plataforma por OAuth no Mercado Pago. Os tokens são guardados criptografados (AES-256-GCM, com IV aleatório e tag de autenticação). Quando o acesso é revogado ou recusado, o sistema detecta, avisa o dono e oferece o fluxo de reconexão, em vez de falhar em silêncio no pagamento do cliente. Há também um modo de teste com pagador fictício e um script para conectar uma conta de teste localmente.
+
+**Por quê.** Reduz o risco e a responsabilidade da plataforma e deixa a revogação do acesso como um estado previsto do sistema, não como um erro inesperado.
+
+## 8. Dinheiro como inteiro e devolução por serviço
+
+**Problema.** Uma compra pode juntar vários serviços pagos de uma vez, e o cliente pode cancelar só um deles, ou a compra inteira, com alguns horários já realizados.
+
+**Decisão.** Valores são sempre inteiros em centavos, nunca ponto flutuante. A compra é um grupo de pagamentos com total e subtotais, e a devolução é calculada por serviço. Ao cancelar a compra inteira, serviços cujo horário já passou ficam de fora do estorno.
+
+**Por quê.** Evita erro de arredondamento e deixa a regra de estorno explícita e testável, em vez de espalhada pelas telas.

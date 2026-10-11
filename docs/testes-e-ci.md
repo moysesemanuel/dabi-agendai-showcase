@@ -2,17 +2,19 @@
 
 ## Testes
 
-**Unitários (Vitest):** cerca de 45 casos em 9 suítes, cobrindo:
+**Unitários (Vitest):** cerca de 660 casos em 90 arquivos, cobrindo:
 
-- regras de agendamento e cálculo de horários;
-- serviço de assinatura e integração com o Mercado Pago;
-- a guarda de fuso horário, que varre o código-fonte;
-- formatadores e máscaras de moeda usados no backoffice e na área do cliente.
+- regras de agendamento, cálculo de horários, carrinho e conflitos entre profissionais;
+- cobrança da assinatura, troca de plano, renovação e reconciliação com o Mercado Pago;
+- pagamento online do cliente final: preço, devolução por serviço, cancelamento de compra e pagamentos com problema;
+- clube de assinatura, pacotes, fila de espera e recorrência;
+- cargos e permissões, incluindo a superfície de telas e rotas de cada cargo;
+- guardas que leem o código-fonte: isolamento entre tenants e fuso horário;
+- formatadores, máscaras de moeda e utilitários.
 
-**End-to-end (Playwright):**
+**Testes que fazem varredura do código.** Dois testes não executam funções: eles leem o código-fonte e o schema. Um falha se uma consulta a tabela com tenant não filtrar pelo tenant. O outro falha se alguém usar `UTC` sem justificativa. Servem para impedir regressões que ninguém notaria em revisão.
 
-- *smoke test* dos fluxos principais;
-- fluxo completo de cancelamento de agendamento.
+**End-to-end (Playwright):** *smoke test* dos fluxos principais e fluxo completo de cancelamento de agendamento.
 
 ## Pipeline
 
@@ -30,6 +32,15 @@ O pipeline tem dois jobs em sequência, disparados em toda PR e a cada push na `
 6. Gera o build de produção e roda os testes E2E com Playwright no Chromium.
 7. Se algo falhar, publica o relatório do Playwright como artefato por 7 dias.
 
-## Jobs agendados
+## Rotinas agendadas
 
-Os lembretes por WhatsApp são disparados por um workflow agendado a cada 15 minutos, que chama uma rota protegida por token.
+Nove workflows no GitHub Actions chamam rotas protegidas por token, em intervalos que vão de 5 minutos a uma vez por mês:
+
+- lembretes de agendamento por WhatsApp;
+- expiração de pagamentos pendentes;
+- renovação e cobrança da mensalidade do clube;
+- geração de agendamentos recorrentes;
+- avisos da fila de espera;
+- reconciliação da assinatura com o Mercado Pago;
+- controle de créditos de WhatsApp;
+- relatório mensal por e-mail.
